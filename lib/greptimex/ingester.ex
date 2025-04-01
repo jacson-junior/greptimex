@@ -3,7 +3,6 @@ defmodule Greptimex.Ingester do
 
   defdelegate start_link(opts), to: ConnGRPC.Channel
   defdelegate child_spec(opts), to: ConnGRPC.Channel
-  defdelegate get(channel), to: ConnGRPC.Channel
 
   @doc """
   Write point(s) to GreptimeDB
@@ -37,20 +36,10 @@ defmodule Greptimex.Ingester do
     write(channel, table_name, [point], opts)
   end
 
-  def write_batch(channel, batches, opts \\ []) when is_list(batches) do
+  def write_batch(channel, batch, opts \\ []) when is_list(batch) do
     inserts =
-      batches
-      |> Enum.map(fn %{table: table, points: points} = batch ->
-        database = Map.get(batch, :database, opts[:database] || "public")
-        schema = Map.get(batch, :schema, opts[:schema] || nil)
-        timezone = Map.get(batch, :timezone, opts[:timezone] || nil)
-
-        opts =
-          opts
-          |> Keyword.put(:database, database)
-          |> Keyword.put(:schema, schema)
-          |> Keyword.put(:timezone, timezone)
-
+      batch
+      |> Enum.map(fn %{table: table, points: points} ->
         insert_request(table, points, opts)
       end)
 
