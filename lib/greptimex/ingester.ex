@@ -1,9 +1,9 @@
 defmodule Greptimex.Ingester do
   alias Greptimex.Point
 
-  def start_link(opts) do
-    ConnGRPC.Channel.start_link(opts)
-  end
+  defdelegate start_link(opts), to: ConnGRPC.Channel
+  defdelegate child_spec(opts), to: ConnGRPC.Channel
+  defdelegate get(channel), to: ConnGRPC.Channel
 
   @doc """
   Write point(s) to GreptimeDB

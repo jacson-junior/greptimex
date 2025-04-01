@@ -7,18 +7,18 @@ defmodule Greptimex.ColumnUtils do
   Determine the data type for a list of values
   """
   def determine_data_type(values) do
-    first_value = Enum.find(values, nil, fn v -> v != nil end)
+    first_value = Enum.find(values, nil, fn v -> v != nil end) |> dbg
 
     cond do
+      is_float(first_value) ->
+        :FLOAT64
+
       is_integer(first_value) ->
         if first_value > 2_147_483_647 or first_value < -2_147_483_648 do
           :INT64
         else
           :INT32
         end
-
-      is_float(first_value) ->
-        :FLOAT64
 
       is_boolean(first_value) ->
         :BOOLEAN

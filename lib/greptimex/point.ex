@@ -41,9 +41,7 @@ defmodule Greptimex.Point do
               Map.get(point.fields, field_name)
             end)
 
-          data_type = ColumnUtils.determine_data_type(values)
-
-          ColumnUtils.prepare_column(field_name, values, data_type, :FIELD)
+          ColumnUtils.prepare_column(field_name, values, :FLOAT64, :FIELD)
         end)
 
       tag_columns =
