@@ -3,6 +3,14 @@ defmodule Greptimex.Point do
 
   defstruct tags: nil, fields: nil, timestamp: nil
 
+  def new(props) do
+    %__MODULE__{
+      tags: Map.get(props, :tags, %{}),
+      fields: Map.get(props, :fields, %{}),
+      timestamp: Map.get(props, :timestamp, System.os_time(:millisecond))
+    }
+  end
+
   @doc """
   Convert a list of points to GreptimeDB columns
 
