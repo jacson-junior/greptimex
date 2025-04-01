@@ -1,0 +1,55 @@
+// Copyright 2023 Greptime Team
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package greptime.v1;
+
+option java_package = "io.greptime.v1";
+option java_outer_classname = "Prometheus";
+option go_package = "github.com/GreptimeTeam/greptime-proto/go/greptime/v1";
+
+import "greptime/v1/common.proto";
+
+// PrometheusGateway behaves absolutely the same as Prometheus HTTP API
+service PrometheusGateway {
+  rpc Handle(PromqlRequest) returns (PromqlResponse);
+}
+
+message PromqlRequest {
+  RequestHeader header = 1;
+  oneof promql {
+    PromInstantQuery instant_query = 2;
+    PromRangeQuery range_query = 3;
+  }
+}
+
+message PromqlResponse {
+  ResponseHeader header = 1;
+  bytes body = 2; // absolutely same format as Prometheus in JSON
+}
+
+message PromInstantQuery {
+  string query = 1;
+  string time = 2;
+  string lookback = 3;
+}
+
+message PromRangeQuery {
+  string query = 1;
+  string start = 2;
+  string end = 3;
+  string step = 4;
+  string lookback = 5;
+}
