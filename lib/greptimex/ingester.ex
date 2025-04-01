@@ -23,36 +23,64 @@ defmodule Greptimex.Ingester do
   def write(channel, table_name, points, opts \\ [])
 
   def write(channel, table_name, points, opts) when is_list(points) do
-    timestamp_column = Keyword.get(opts, :timestamp_column, "timestamp")
-    timestamp_type = Keyword.get(opts, :timestamp_type, :TIMESTAMP_MILLISECOND)
-
     with {:ok, channel} <- ConnGRPC.Channel.get(channel) do
-      columns = Point.to_columns(points, timestamp_column, timestamp_type)
+      insert = insert_request(table_name, points, opts)
 
-      header = %Greptime.V1.RequestHeader{
-        catalog: "greptime",
-        dbname: opts[:database] || "public",
-        schema: opts[:schema] || nil,
-        timezone: opts[:timezone] || nil
-      }
-
-      insert_request = %Greptime.V1.InsertRequest{
-        table_name: table_name,
-        columns: columns,
-        row_count: length(points)
-      }
-
-      request =
-        %Greptime.V1.GreptimeRequest{
-          header: header,
-          request: {:inserts, %Greptime.V1.InsertRequests{inserts: [insert_request]}}
-        }
-
-      Greptime.V1.GreptimeDatabase.Stub.handle(channel, request)
+      Greptime.V1.GreptimeDatabase.Stub.handle(channel, %Greptime.V1.GreptimeRequest{
+        header: header(opts),
+        request: {:inserts, %Greptime.V1.InsertRequests{inserts: [insert]}}
+      })
     end
   end
 
   def write(channel, table_name, point, opts) do
     write(channel, table_name, [point], opts)
+  end
+
+  def write_batch(channel, batches, opts \\ []) when is_list(batches) do
+    inserts =
+      batches
+      |> Enum.map(fn %{table: table, points: points} = batch ->
+        database = Map.get(batch, :database, opts[:database] || "public")
+        schema = Map.get(batch, :schema, opts[:schema] || nil)
+        timezone = Map.get(batch, :timezone, opts[:timezone] || nil)
+
+        opts =
+          opts
+          |> Keyword.put(:database, database)
+          |> Keyword.put(:schema, schema)
+          |> Keyword.put(:timezone, timezone)
+
+        insert_request(table, points, opts)
+      end)
+
+    with {:ok, channel} <- ConnGRPC.Channel.get(channel) do
+      Greptime.V1.GreptimeDatabase.Stub.handle(channel, %Greptime.V1.GreptimeRequest{
+        header: header(opts),
+        request: {:inserts, %Greptime.V1.InsertRequests{inserts: inserts}}
+      })
+    end
+  end
+
+  defp header(opts) do
+    %Greptime.V1.RequestHeader{
+      catalog: "greptime",
+      dbname: opts[:database] || "public",
+      schema: opts[:schema] || nil,
+      timezone: opts[:timezone] || nil
+    }
+  end
+
+  defp insert_request(table, points, opts) do
+    timestamp_column = Keyword.get(opts, :timestamp_column, "timestamp")
+    timestamp_type = Keyword.get(opts, :timestamp_type, :TIMESTAMP_MILLISECOND)
+
+    columns = Point.to_columns(points, timestamp_column, timestamp_type)
+
+    %Greptime.V1.InsertRequest{
+      table_name: table,
+      columns: columns,
+      row_count: length(points)
+    }
   end
 end
