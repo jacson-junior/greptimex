@@ -10,7 +10,7 @@ by adding `greptimex` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:greptimex, "~> 0.1.2"}
+    {:greptimex, "~> 0.1.3"}
   ]
 end
 ```
