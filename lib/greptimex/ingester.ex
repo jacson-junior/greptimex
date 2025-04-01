@@ -39,7 +39,7 @@ defmodule Greptimex.Ingester do
       insert_request = %Greptime.V1.InsertRequest{
         table_name: table_name,
         columns: columns,
-        row_count: if(Enum.empty?(points), do: 0, else: length(points))
+        row_count: length(points)
       }
 
       request =

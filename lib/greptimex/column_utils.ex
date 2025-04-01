@@ -7,7 +7,7 @@ defmodule Greptimex.ColumnUtils do
   Determine the data type for a list of values
   """
   def determine_data_type(values) do
-    first_value = Enum.find(values, 0, fn v -> v != nil end)
+    first_value = Enum.find(values, nil, fn v -> v != nil end)
 
     cond do
       is_integer(first_value) ->
