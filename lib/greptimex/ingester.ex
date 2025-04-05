@@ -25,10 +25,14 @@ defmodule Greptimex.Ingester do
     with {:ok, channel} <- ConnGRPC.Channel.get(channel) do
       insert = insert_request(table_name, points, opts)
 
-      Greptime.V1.GreptimeDatabase.Stub.handle(channel, %Greptime.V1.GreptimeRequest{
-        header: header(opts),
-        request: {:inserts, %Greptime.V1.InsertRequests{inserts: [insert]}}
-      })
+      Greptime.V1.GreptimeDatabase.Stub.handle(
+        channel,
+        %Greptime.V1.GreptimeRequest{
+          header: header(opts),
+          request: {:inserts, %Greptime.V1.InsertRequests{inserts: [insert]}}
+        }
+        |> dbg
+      )
     end
   end
 
@@ -56,7 +60,8 @@ defmodule Greptimex.Ingester do
       catalog: "greptime",
       dbname: opts[:database] || "public",
       schema: opts[:schema] || nil,
-      timezone: opts[:timezone] || nil
+      timezone: opts[:timezone] || nil,
+      authorization: opts[:auth] |> maybe_add_auth()
     }
   end
 
@@ -72,4 +77,17 @@ defmodule Greptimex.Ingester do
       row_count: length(points)
     }
   end
+
+  defp maybe_add_auth({:basic, {username, password}}) do
+    %Greptime.V1.AuthHeader{
+      auth_scheme:
+        {:basic,
+         %Greptime.V1.Basic{
+           username: username,
+           password: password
+         }}
+    }
+  end
+
+  defp maybe_add_auth(nil), do: nil
 end
