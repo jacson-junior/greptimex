@@ -1,4 +1,6 @@
 defmodule Greptimex.Promql do
+  @moduledoc false
+
   alias Greptimex.Connection
   alias Greptimex.Greptime.V1
 

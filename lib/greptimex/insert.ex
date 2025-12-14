@@ -1,4 +1,6 @@
 defmodule Greptimex.Insert do
+  @moduledoc false
+
   alias Greptimex.Connection
   alias Greptimex.Greptime.V1
   alias Greptimex.Types

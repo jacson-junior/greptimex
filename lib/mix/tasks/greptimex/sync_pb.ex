@@ -62,7 +62,6 @@ defmodule Mix.Tasks.Greptimex.SyncPb do
         "protoc",
         [
           "--elixir_opt=package_prefix=greptimex",
-          "--elixir_opt=include_docs=true",
           "--elixir_out=one_file_per_module=true,plugins=grpc:./lib" | proto_files
         ],
         stderr_to_stdout: true

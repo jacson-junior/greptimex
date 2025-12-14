@@ -1,13 +1,8 @@
 defmodule Greptimex.Types do
-  @moduledoc """
-  Type inference and conversion utilities for GreptimeDB data types.
-  """
+  @moduledoc false
 
   alias Greptimex.Greptime.V1
 
-  @doc """
-  Infers the datatype of a single value.
-  """
   def infer_datatype(value) when is_integer(value), do: :INT64
   def infer_datatype(value) when is_float(value), do: :FLOAT64
   def infer_datatype(value) when is_boolean(value), do: :BOOLEAN
@@ -24,10 +19,6 @@ defmodule Greptimex.Types do
   def infer_datatype(value) when is_list(value), do: :LIST
   def infer_datatype(_), do: :STRING
 
-  @doc """
-  Infers the widest datatype from a list of values.
-  Handles both raw values and {value, explicit_datatype} tuples.
-  """
   def infer_widest_datatype(values) do
     values
     |> Enum.reject(&is_nil/1)
@@ -38,9 +29,6 @@ defmodule Greptimex.Types do
     |> Enum.reduce(:STRING, &widen_datatype/2)
   end
 
-  @doc """
-  Widens two datatypes to the most general type that can hold both.
-  """
   def widen_datatype(dt1, dt2) when dt1 == dt2, do: dt1
   def widen_datatype(:FLOAT64, _), do: :FLOAT64
   def widen_datatype(_, :FLOAT64), do: :FLOAT64
@@ -81,9 +69,6 @@ defmodule Greptimex.Types do
   def widen_datatype(:TIME_SECOND, :TIME_MILLISECOND), do: :TIME_MILLISECOND
   def widen_datatype(_, _), do: :STRING
 
-  @doc """
-  Converts a timestamp value to a GreptimeDB Value based on datatype.
-  """
   def timestamp_value(:TIMESTAMP_NANOSECOND, ts),
     do: %V1.Value{value_data: {:timestamp_nanosecond_value, ts}}
 
@@ -98,9 +83,6 @@ defmodule Greptimex.Types do
 
   def timestamp_value(_, ts), do: %V1.Value{value_data: {:timestamp_millisecond_value, ts}}
 
-  @doc """
-  Converts a field value to a GreptimeDB Value based on datatype.
-  """
   def field_value(:INT8, v), do: %V1.Value{value_data: {:i8_value, v}}
   def field_value(:INT16, v), do: %V1.Value{value_data: {:i16_value, v}}
   def field_value(:INT32, v), do: %V1.Value{value_data: {:i32_value, v}}
@@ -193,9 +175,6 @@ defmodule Greptimex.Types do
   def field_value(_, v) when is_integer(v), do: %V1.Value{value_data: {:i64_value, v}}
   def field_value(_, v), do: %V1.Value{value_data: {:f64_value, v * 1.0}}
 
-  @doc """
-  Converts a tag value to a GreptimeDB Value based on datatype.
-  """
   def tag_value(:STRING, v), do: %V1.Value{value_data: {:string_value, to_string(v)}}
   def tag_value(:INT8, v), do: %V1.Value{value_data: {:i8_value, v}}
   def tag_value(:INT16, v), do: %V1.Value{value_data: {:i16_value, v}}
@@ -208,16 +187,9 @@ defmodule Greptimex.Types do
   def tag_value(:BINARY, v), do: %V1.Value{value_data: {:binary_value, v}}
   def tag_value(_, v), do: %V1.Value{value_data: {:string_value, to_string(v)}}
 
-  @doc """
-  Extracts the raw value from either a plain value or {value, datatype} tuple.
-  Returns {value, datatype} or {value, nil}.
-  """
   def extract_value({value, datatype}) when is_atom(datatype), do: {value, datatype}
   def extract_value(value), do: value
 
-  @doc """
-  Normalizes a value to {raw_value, explicit_datatype | nil} tuple.
-  """
   def normalize_value({value, datatype}) when is_atom(datatype), do: {value, datatype}
   def normalize_value(value), do: {value, nil}
 end
