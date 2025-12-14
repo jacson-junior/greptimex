@@ -225,7 +225,17 @@ defmodule Greptimex.Connection do
       dbname: opts[:dbname],
       schema: opts[:schema],
       timezone: opts[:timezone],
-      authorization: opts[:auth]
+      authorization: authorization(opts[:auth])
     }
   end
+
+  defp authorization({:basic, {username, password}}) do
+    %V1.Basic{
+      username: username,
+      password: password
+    }
+  end
+
+  defp authorization(nil), do: nil
+  defp authorization(_), do: nil
 end
