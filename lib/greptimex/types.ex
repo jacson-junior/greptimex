@@ -202,16 +202,6 @@ defmodule Greptimex.Types do
       {hi, lo} = decimal_to_int128(v)
       %V1.Value{value_data: {:decimal128_value, %V1.Decimal128{hi: hi, lo: lo}}}
     end
-
-    # Helper to convert Decimal to int128 (hi/lo representation)
-    defp decimal_to_int128(%Decimal{} = d) do
-      # Simple implementation - convert to integer representation
-      # This is a simplified version; you may need more sophisticated handling
-      int_val = Decimal.to_integer(Decimal.mult(d, Decimal.new(1_000_000)))
-      hi = div(int_val, 0x10000000000000000)
-      lo = rem(int_val, 0x10000000000000000)
-      {hi, lo}
-    end
   end
 
   def field_value(:JSON, v) when is_map(v) or is_list(v) do
@@ -255,4 +245,16 @@ defmodule Greptimex.Types do
 
   def normalize_value({value, datatype}) when is_atom(datatype), do: {value, datatype}
   def normalize_value(value), do: {value, nil}
+
+  if Code.ensure_loaded?(Decimal) do
+    # Helper to convert Decimal to int128 (hi/lo representation)
+    defp decimal_to_int128(%Decimal{} = d) do
+      # Simple implementation - convert to integer representation
+      # This is a simplified version; you may need more sophisticated handling
+      int_val = Decimal.to_integer(Decimal.mult(d, Decimal.new(1_000_000)))
+      hi = div(int_val, 0x10000000000000000)
+      lo = rem(int_val, 0x10000000000000000)
+      {hi, lo}
+    end
+  end
 end
