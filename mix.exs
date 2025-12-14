@@ -7,7 +7,11 @@ defmodule Greptimex.MixProject do
       version: "0.2.1",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      deps: deps(),
+      name: "Greptimex",
+      source_url: "https://github.com/jacson-junior/greptimex"
     ]
   end
 
@@ -26,6 +30,17 @@ defmodule Greptimex.MixProject do
       {:telemetry, "~> 1.0"},
       {:castore, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+    ]
+  end
+
+  defp description() do
+    "Elixir client for GreptimeDB using gRPC"
+  end
+
+  defp package() do
+    [
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => "https://github.com/jacson-junior/greptimex"}
     ]
   end
 end
