@@ -16,11 +16,12 @@ syntax = "proto3";
 
 package greptime.v1;
 
-option java_package = "io.greptime.v1";
-option java_outer_classname = "Ddl";
-option go_package = "github.com/GreptimeTeam/greptime-proto/go/greptime/v1";
-
+import "google/protobuf/duration.proto";
 import "greptime/v1/common.proto";
+
+option go_package = "github.com/GreptimeTeam/greptime-proto/go/greptime/v1";
+option java_outer_classname = "Ddl";
+option java_package = "io.greptime.v1";
 
 // "Data Definition Language" requests, that create, modify or delete the
 // database structures but not the data. `DdlRequest` could carry more
@@ -51,6 +52,7 @@ message CreateFlowExpr {
   bool create_if_not_exists = 6;
   // Expire data older than the given duration seconds.
   ExpireAfter expire_after = 7;
+  EvalInterval eval_interval = 11;
   string comment = 8;
   string sql = 9;
   map<string, string> flow_options = 10;
@@ -112,9 +114,33 @@ message AlterTableExpr {
     ModifyColumnTypes modify_column_types = 7;
     SetTableOptions set_table_options = 8;
     UnsetTableOptions unset_table_options = 11;
+    // Deprecated: use set_indexes instead.
     SetIndex set_index = 12;
+    // Deprecated: use unset_indexes instead.
     UnsetIndex unset_index = 13;
+    DropDefaults drop_defaults = 14;
+    SetIndexes set_indexes = 15;
+    UnsetIndexes unset_indexes = 16;
+    SetDefaults set_defaults = 17;
   }
+}
+
+message DropDefault {
+  string column_name = 1;
+}
+
+message SetIndexes {
+  repeated SetIndex set_indexes = 1;
+}
+
+message UnsetIndexes {
+  repeated UnsetIndex unset_indexes = 1;
+}
+
+message SetDefault {
+  string column_name = 1;
+  // The JSON representation of the default `Expr`.
+  bytes default_constraint = 2;
 }
 
 message SetIndex {
@@ -153,6 +179,8 @@ message TruncateTableExpr {
   string schema_name = 2;
   string table_name = 3;
   TableId table_id = 4;
+  // if empty, truncate entire table, else only truncate time ranges
+  TimeRanges time_ranges = 5;
 }
 
 message DropDatabaseExpr {
@@ -165,11 +193,25 @@ message AddColumns {
   repeated AddColumn add_columns = 1;
 }
 
-message DropColumns { repeated DropColumn drop_columns = 1; }
+message DropDefaults {
+  repeated DropDefault drop_defaults = 1;
+}
 
-message ModifyColumnTypes { repeated ModifyColumnType modify_column_types = 1; }
+message SetDefaults {
+  repeated SetDefault set_defaults = 1;
+}
 
-message RenameTable { string new_table_name = 1; }
+message DropColumns {
+  repeated DropColumn drop_columns = 1;
+}
+
+message ModifyColumnTypes {
+  repeated ModifyColumnType modify_column_types = 1;
+}
+
+message RenameTable {
+  string new_table_name = 1;
+}
 
 message AddColumn {
   ColumnDef column_def = 1;
@@ -189,18 +231,24 @@ message Option {
 }
 
 message SetTableOptions {
-    repeated Option table_options = 1;
+  repeated Option table_options = 1;
 }
 
 message UnsetTableOptions {
-    repeated string keys = 1;
+  repeated string keys = 1;
 }
 
-message DropColumn { string name = 1; }
+message DropColumn {
+  string name = 1;
+}
 
-message TableId { uint32 id = 1; }
+message TableId {
+  uint32 id = 1;
+}
 
-message FlowId { uint32 id = 1; }
+message FlowId {
+  uint32 id = 1;
+}
 
 message ColumnDef {
   string name = 1;
@@ -227,56 +275,115 @@ message AddColumnLocation {
 }
 
 enum Analyzer {
-    ENGLISH = 0;
-    CHINESE = 1;
+  ENGLISH = 0;
+  CHINESE = 1;
+}
+
+enum FulltextBackend {
+  TANTIVY = 0;
+  BLOOM = 1;
 }
 
 message SetFulltext {
-    string column_name = 1;
-    bool enable = 2;
-    Analyzer analyzer = 3;
-    bool case_sensitive = 4;
+  string column_name = 1;
+  bool enable = 2;
+  Analyzer analyzer = 3;
+  bool case_sensitive = 4;
+  FulltextBackend backend = 5;
+  // The granularity for the fulltext index (for bloom backend only).
+  uint64 granularity = 6;
+  // The false positive rate for the fulltext index (for bloom backend only).
+  double false_positive_rate = 7;
 }
 
 message UnsetFulltext {
-    string column_name = 1;
+  string column_name = 1;
 }
 
 message SetInverted {
-    string column_name = 1;
+  string column_name = 1;
 }
 
 message UnsetInverted {
-    string column_name = 1;
+  string column_name = 1;
 }
 
 enum SkippingIndexType {
-    BLOOM_FILTER = 0;
+  BLOOM_FILTER = 0;
 }
 
 message SetSkipping {
-    string column_name = 1;
-    bool enable = 2;
-    uint64 granularity = 3;
-    SkippingIndexType skipping_index_type = 4;
+  string column_name = 1;
+  bool enable = 2;
+  uint64 granularity = 3;
+  SkippingIndexType skipping_index_type = 4;
+  double false_positive_rate = 5;
 }
 
 message UnsetSkipping {
-    string column_name = 1;
+  string column_name = 1;
 }
 message AlterDatabaseExpr {
-    string catalog_name = 1;
-    string schema_name = 2;
-    oneof kind {
-        SetDatabaseOptions set_database_options = 3;
-        UnsetDatabaseOptions unset_database_options = 4;
-    }
+  string catalog_name = 1;
+  string schema_name = 2;
+  oneof kind {
+    SetDatabaseOptions set_database_options = 3;
+    UnsetDatabaseOptions unset_database_options = 4;
+  }
 }
 
 message SetDatabaseOptions {
-    repeated Option set_database_options = 1;
+  repeated Option set_database_options = 1;
 }
 
 message UnsetDatabaseOptions {
-    repeated string keys = 1;
+  repeated string keys = 1;
+}
+
+// The create trigger expression.
+message CreateTriggerExpr {
+  string catalog_name = 1;
+  string trigger_name = 2;
+  bool create_if_not_exists = 3;
+  // The SQL statement to be executed periodically.
+  string sql = 4;
+  // The channels for sending notifications.
+  repeated NotifyChannel channels = 5;
+  // The user-defined labels.
+  map<string, string> labels = 6;
+  // The user-defined annotations.
+  map<string, string> annotations = 7;
+  google.protobuf.Duration interval = 8;
+  // The raw interval expression, e.g., '1 minute'::INTERVAL.
+  string raw_interval_expr = 9;
+  // The duration that the condition must be met continuously before firing the
+  // trigger.
+  google.protobuf.Duration for = 10;
+  // The raw SQL expression for 'for' duration, e.g., '5 minutes'::INTERVAL.
+  string for_raw_expr = 11;
+  // The duration to keep firing after the condition is no longer met.
+  google.protobuf.Duration keep_firing_for = 12;
+  // The raw SQL expression for 'keep_firing_for' duration, e.g.,
+  // '10 minutes'::INTERVAL.
+  string keep_firing_for_raw_expr = 13;
+}
+
+// The notification channel for trigger.
+message NotifyChannel {
+  string name = 1;
+  oneof channel_type {
+    WebhookOptions webhook = 2;
+  }
+}
+
+// The options for webhook.
+message WebhookOptions {
+  string url = 1;
+  map<string, string> opts = 2;
+}
+
+message DropTriggerExpr {
+  string catalog_name = 1;
+  string trigger_name = 2;
+  bool drop_if_exists = 3;
 }
