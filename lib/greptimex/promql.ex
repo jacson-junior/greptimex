@@ -11,10 +11,10 @@ defmodule Greptimex.Promql do
         lookback,
         opts
       ) do
-    start_time = DateTime.to_unix(start_time)
-    end_time = DateTime.to_unix(end_time)
+    start_time_unix = DateTime.to_unix(start_time)
+    end_time_unix = DateTime.to_unix(end_time)
 
-    query_range(channel, query, start_time, end_time, step, lookback, opts)
+    query_range(channel, query, start_time_unix, end_time_unix, step, lookback, opts)
   end
 
   def query_range(
@@ -27,6 +27,11 @@ defmodule Greptimex.Promql do
         opts
       )
       when is_integer(start_time) and is_integer(end_time) do
+    start_monotonic = System.monotonic_time()
+    metadata = %{query: query, start_time: start_time, end_time: end_time, step: step}
+
+    emit_start(:query_range, metadata)
+
     prom_query =
       %V1.PromRangeQuery{
         query: query,
@@ -36,13 +41,18 @@ defmodule Greptimex.Promql do
         lookback: lookback
       }
 
-    case V1.PrometheusGateway.Stub.handle(
-           channel,
-           %V1.PromqlRequest{
-             header: Connection.header(opts[:header]),
-             promql: {:range_query, prom_query}
-           }
-         ) do
+    result =
+      V1.PrometheusGateway.Stub.handle(
+        channel,
+        %V1.PromqlRequest{
+          header: Connection.header(opts[:header]),
+          promql: {:range_query, prom_query}
+        }
+      )
+
+    duration = System.monotonic_time() - start_monotonic
+
+    case result do
       {:ok,
        %{
          header: %{status: %{status_code: 0}},
@@ -50,26 +60,38 @@ defmodule Greptimex.Promql do
        }} ->
         case JSON.decode!(body) do
           %{"status" => "error"} = response ->
-            {:error, %{message: response["error"]}}
+            error = %{message: response["error"]}
+            emit_failure(:query_range, duration, :error, error, metadata)
+            {:error, error}
 
           %{"status" => "success"} = response ->
-            {:ok, parse_matrix(response["data"])}
+            parsed = parse_matrix(response["data"])
+            emit_success(:query_range, duration, length(parsed), metadata)
+            {:ok, parsed}
         end
 
       {:ok, %{header: %{status: %{status_code: status, err_msg: message}}}} ->
-        {:error, %{status: status, message: message}}
+        error = %{status: status, message: message}
+        emit_failure(:query_range, duration, :error, error, metadata)
+        {:error, error}
 
       {:error, reason} ->
+        emit_failure(:query_range, duration, :error, reason, metadata)
         {:error, reason}
     end
   end
 
   def query_instant(channel, query, %DateTime{} = time, lookback, opts) do
-    time = DateTime.to_unix(time)
-    query_instant(channel, query, time, lookback, opts)
+    time_unix = DateTime.to_unix(time)
+    query_instant(channel, query, time_unix, lookback, opts)
   end
 
   def query_instant(channel, query, time, lookback, opts) when is_integer(time) do
+    start_monotonic = System.monotonic_time()
+    metadata = %{query: query, time: time}
+
+    emit_start(:query_instant, metadata)
+
     prom_query =
       %V1.PromInstantQuery{
         query: query,
@@ -77,13 +99,18 @@ defmodule Greptimex.Promql do
         lookback: lookback
       }
 
-    case V1.PrometheusGateway.Stub.handle(
-           channel,
-           %V1.PromqlRequest{
-             header: Connection.header(opts[:header]),
-             promql: {:instant_query, prom_query}
-           }
-         ) do
+    result =
+      V1.PrometheusGateway.Stub.handle(
+        channel,
+        %V1.PromqlRequest{
+          header: Connection.header(opts[:header]),
+          promql: {:instant_query, prom_query}
+        }
+      )
+
+    duration = System.monotonic_time() - start_monotonic
+
+    case result do
       {:ok,
        %{
          header: %{status: %{status_code: 0}},
@@ -91,16 +118,23 @@ defmodule Greptimex.Promql do
        }} ->
         case JSON.decode!(body) do
           %{"status" => "error"} = response ->
-            {:error, %{message: response["error"]}}
+            error = %{message: response["error"]}
+            emit_failure(:query_instant, duration, :error, error, metadata)
+            {:error, error}
 
           %{"status" => "success"} = response ->
-            {:ok, parse_vector(response["data"])}
+            parsed = parse_vector(response["data"])
+            emit_success(:query_instant, duration, length(parsed), metadata)
+            {:ok, parsed}
         end
 
       {:ok, %{header: %{status: %{status_code: status, err_msg: message}}}} ->
-        {:error, %{status: status, message: message}}
+        error = %{status: status, message: message}
+        emit_failure(:query_instant, duration, :error, error, metadata)
+        {:error, error}
 
       {:error, reason} ->
+        emit_failure(:query_instant, duration, :error, reason, metadata)
         {:error, reason}
     end
   end
@@ -129,5 +163,29 @@ defmodule Greptimex.Promql do
         value: {DateTime.from_unix!(microseconds, :microsecond), value}
       }
     end)
+  end
+
+  defp emit_start(event, metadata) do
+    :telemetry.execute(
+      [:greptimex, event, :start],
+      %{system_time: System.system_time()},
+      metadata
+    )
+  end
+
+  defp emit_success(event, duration, result_count, metadata) do
+    :telemetry.execute(
+      [:greptimex, event, :success],
+      %{duration: duration, result_count: result_count},
+      metadata
+    )
+  end
+
+  defp emit_failure(event, duration, kind, reason, metadata) do
+    :telemetry.execute(
+      [:greptimex, event, :failure],
+      %{duration: duration},
+      Map.merge(metadata, %{kind: kind, reason: reason})
+    )
   end
 end

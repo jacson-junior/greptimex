@@ -4,28 +4,60 @@ defmodule Greptimex.Insert do
   alias Greptimex.Types
 
   def handle(channel, rows, opts) when is_list(rows) do
+    {table, row_count} = extract_table_info(rows)
+    start_time = System.monotonic_time()
+    metadata = %{table: table, row_count: row_count}
+
+    emit_start(metadata)
+
     inserts = Enum.map(rows, fn row -> row_to_insert(row, opts) end)
 
-    case V1.GreptimeDatabase.Stub.handle(
-           channel,
-           %V1.GreptimeRequest{
-             header: Connection.header(opts[:header]),
-             request: {:row_inserts, %V1.RowInsertRequests{inserts: inserts}}
-           }
-         ) do
+    result =
+      V1.GreptimeDatabase.Stub.handle(
+        channel,
+        %V1.GreptimeRequest{
+          header: Connection.header(opts[:header]),
+          request: {:row_inserts, %V1.RowInsertRequests{inserts: inserts}}
+        }
+      )
+
+    duration = System.monotonic_time() - start_time
+
+    case result do
       {:ok,
        %{
          header: %{status: %{status_code: 0}},
          response: {:affected_rows, %{value: affected_rows}}
        }} ->
+        emit_success(duration, affected_rows, metadata)
         {:ok, affected_rows}
 
       {:ok, %{header: %{status: %{status_code: status, err_msg: message}}}} ->
-        {:error, %{status: status, message: message}}
+        error = %{status: status, message: message}
+        emit_failure(duration, :error, error, metadata)
+        {:error, error}
 
       {:error, reason} ->
+        emit_failure(duration, :error, reason, metadata)
         {:error, reason}
     end
+  end
+
+  defp extract_table_info(rows) do
+    table =
+      case List.first(rows) do
+        {table_name, _} -> table_name
+        _ -> nil
+      end
+
+    row_count =
+      Enum.reduce(rows, 0, fn
+        {_, rows_list}, acc when is_list(rows_list) -> acc + length(rows_list)
+        {_, _row}, acc -> acc + 1
+        _, acc -> acc
+      end)
+
+    {table, row_count}
   end
 
   defp row_to_insert({table, rows}, opts) when is_list(rows) do
@@ -137,5 +169,29 @@ defmodule Greptimex.Insert do
       end)
 
     %V1.Row{values: values}
+  end
+
+  defp emit_start(metadata) do
+    :telemetry.execute(
+      [:greptimex, :insert, :start],
+      %{system_time: System.system_time()},
+      metadata
+    )
+  end
+
+  defp emit_success(duration, affected_rows, metadata) do
+    :telemetry.execute(
+      [:greptimex, :insert, :success],
+      %{duration: duration, affected_rows: affected_rows},
+      metadata
+    )
+  end
+
+  defp emit_failure(duration, kind, reason, metadata) do
+    :telemetry.execute(
+      [:greptimex, :insert, :failure],
+      %{duration: duration},
+      Map.merge(metadata, %{kind: kind, reason: reason})
+    )
   end
 end

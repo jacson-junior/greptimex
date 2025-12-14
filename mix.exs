@@ -22,6 +22,7 @@ defmodule Greptimex.MixProject do
       {:grpc, "~> 0.11"},
       {:protobuf, "~> 0.15"},
       {:conn_grpc, "~> 0.3"},
+      {:telemetry, "~> 1.0"},
       {:castore, "~> 1.0", only: [:dev, :test]}
     ]
   end
