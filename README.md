@@ -28,7 +28,7 @@ defmodule MyApp.Greptime do
     ],
     header: [
       catalog: "greptime",
-      database: "public"
+      dbname: "public"
     ]
 end
 ```
@@ -44,7 +44,7 @@ config :my_app, MyApp.Greptime,
   ],
   header: [
     catalog: "greptime",
-    database: "public"
+    dbname: "public"
   ]
 
 # lib/my_app/greptime.ex
@@ -118,12 +118,12 @@ Events emitted:
 
 | Event | Measurements | Metadata |
 |-------|-------------|----------|
-| `:insert :start` | `system_time` | `table`, `row_count` |
-| `:insert :success` | `duration`, `affected_rows` | `table`, `row_count` |
-| `:insert :failure` | `duration` | `table`, `row_count`, `kind`, `reason` |
-| `:query_instant :start` | `system_time` | `query`, `time` |
-| `:query_instant :success` | `duration`, `result_count` | `query`, `time` |
-| `:query_instant :failure` | `duration` | `query`, `time`, `kind`, `reason` |
-| `:query_range :start` | `system_time` | `query`, `start_time`, `end_time`, `step` |
-| `:query_range :success` | `duration`, `result_count` | `query`, `start_time`, `end_time`, `step` |
-| `:query_range :failure` | `duration` | `query`, `start_time`, `end_time`, `step`, `kind`, `reason` |
+| `:insert :start` | `system_time` | `row_count`, `dbname` |
+| `:insert :success` | `duration`, `affected_rows` | `row_count`, `dbname` |
+| `:insert :failure` | `duration` | `row_count`, `dbname`, `kind`, `reason` |
+| `:query_instant :start` | `system_time` | `query`, `time`, `dbname` |
+| `:query_instant :success` | `duration`, `result_count` | `query`, `time`, `dbname` |
+| `:query_instant :failure` | `duration` | `query`, `time`, `dbname`, `kind`, `reason` |
+| `:query_range :start` | `system_time` | `query`, `start_time`, `end_time`, `step`, `dbname` |
+| `:query_range :success` | `duration`, `result_count` | `query`, `start_time`, `end_time`, `step`, `dbname` |
+| `:query_range :failure` | `duration` | `query`, `start_time`, `end_time`, `step`, `dbname`, `kind`, `reason` |

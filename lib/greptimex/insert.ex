@@ -6,9 +6,13 @@ defmodule Greptimex.Insert do
   alias Greptimex.Types
 
   def handle(channel, rows, opts) when is_list(rows) do
-    {table, row_count} = extract_table_info(rows)
+    row_count = extract_row_count(rows)
     start_time = System.monotonic_time()
-    metadata = %{table: table, row_count: row_count}
+
+    metadata = %{
+      row_count: row_count,
+      dbname: opts[:header][:dbname]
+    }
 
     emit_start(metadata)
 
@@ -45,21 +49,12 @@ defmodule Greptimex.Insert do
     end
   end
 
-  defp extract_table_info(rows) do
-    table =
-      case List.first(rows) do
-        {table_name, _} -> table_name
-        _ -> nil
-      end
-
-    row_count =
-      Enum.reduce(rows, 0, fn
-        {_, rows_list}, acc when is_list(rows_list) -> acc + length(rows_list)
-        {_, _row}, acc -> acc + 1
-        _, acc -> acc
-      end)
-
-    {table, row_count}
+  defp extract_row_count(rows) do
+    Enum.reduce(rows, 0, fn
+      {_, rows_list}, acc when is_list(rows_list) -> acc + length(rows_list)
+      {_, _row}, acc -> acc + 1
+      _, acc -> acc
+    end)
   end
 
   defp row_to_insert({table, rows}, opts) when is_list(rows) do

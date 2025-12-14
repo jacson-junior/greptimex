@@ -14,7 +14,7 @@ defmodule Greptimex.Connection do
   ### Optional
   * `:header` - Default header options passed with each request
     * `:catalog` - The catalog name. Default: `"greptime"`
-    * `:database` - The database name. Default: `"public"`
+    * `:dbname` - The database name. Default: `"public"`
     * `:schema` - The schema name. Default: `nil`
     * `:timezone` - The timezone for timestamp interpretation. Default: `nil`
     * `:auth` - Authentication credentials as `{:basic, {username, password}}` tuple. Default: `nil`
@@ -33,7 +33,7 @@ defmodule Greptimex.Connection do
           ],
           header: [
             catalog: "greptime",
-            database: "public",
+            dbname: "public",
             auth: {:basic, {"username", "password"}}
           ]
       end
@@ -211,7 +211,7 @@ defmodule Greptimex.Connection do
         config = get_config()
 
         Keyword.merge(
-          [catalog: "greptime", database: "public"],
+          [catalog: "greptime", dbname: "public"],
           config[:header] || []
         )
       end

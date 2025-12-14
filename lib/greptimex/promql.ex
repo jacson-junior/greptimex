@@ -30,7 +30,14 @@ defmodule Greptimex.Promql do
       )
       when is_integer(start_time) and is_integer(end_time) do
     start_monotonic = System.monotonic_time()
-    metadata = %{query: query, start_time: start_time, end_time: end_time, step: step}
+
+    metadata = %{
+      query: query,
+      start_time: start_time,
+      end_time: end_time,
+      step: step,
+      dbname: opts[:header][:dbname]
+    }
 
     emit_start(:query_range, metadata)
 
@@ -90,7 +97,7 @@ defmodule Greptimex.Promql do
 
   def query_instant(channel, query, time, lookback, opts) when is_integer(time) do
     start_monotonic = System.monotonic_time()
-    metadata = %{query: query, time: time}
+    metadata = %{query: query, time: time, dbname: opts[:header][:dbname]}
 
     emit_start(:query_instant, metadata)
 
