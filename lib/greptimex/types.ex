@@ -175,7 +175,7 @@ defmodule Greptimex.Types do
     do: %V1.Value{value_data: {:time_microsecond_value, v}}
 
   def field_value(:TIME_NANOSECOND, %Time{} = v) do
-    {micros, precision} = v.microsecond
+    {micros, _precision} = v.microsecond
     nanos = (v.hour * 3600 + v.minute * 60 + v.second) * 1_000_000_000 + micros * 1000
     %V1.Value{value_data: {:time_nanosecond_value, nanos}}
   end
