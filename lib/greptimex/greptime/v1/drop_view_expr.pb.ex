@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.DropViewExpr do
-  @moduledoc """
-  Drop a view
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

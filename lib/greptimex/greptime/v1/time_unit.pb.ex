@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.TimeUnit do
-  @moduledoc """
-  / Time Unit for timestamp
-  """
+  @moduledoc false
 
   use Protobuf, enum: true, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

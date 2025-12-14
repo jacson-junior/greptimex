@@ -1,10 +1,5 @@
 defmodule Greptimex.Greptime.V1.DdlRequest do
-  @moduledoc """
-  "Data Definition Language" requests, that create, modify or delete the
-  database structures but not the data. `DdlRequest` could carry more
-  information than plain SQL, for example, the "table_id" in `CreateTableExpr`.
-  So create a new DDL expr if you need it.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

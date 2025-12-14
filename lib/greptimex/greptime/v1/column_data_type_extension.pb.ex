@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.ColumnDataTypeExtension do
-  @moduledoc """
-  Type extension for some complex types
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

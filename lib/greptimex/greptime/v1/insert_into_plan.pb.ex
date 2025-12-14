@@ -1,8 +1,5 @@
 defmodule Greptimex.Greptime.V1.InsertIntoPlan do
-  @moduledoc """
-  A temporary solution for executing insert into table SELECT .. with logical plan
-  since substrait to logical plan doesn't support dml yet.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.ColumnOptions do
-  @moduledoc """
-  Additional options for the column.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.WebhookOptions do
-  @moduledoc """
-  The options for webhook.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

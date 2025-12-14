@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.CreateFlowExpr do
-  @moduledoc """
-  Create a flow to run the SQL when new data arrives.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 

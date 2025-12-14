@@ -1,7 +1,5 @@
 defmodule Greptimex.Greptime.V1.DropFlowExpr do
-  @moduledoc """
-  Drop a flow.
-  """
+  @moduledoc false
 
   use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
 
