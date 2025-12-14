@@ -10,6 +10,7 @@ defmodule Greptimex.MixProject do
       description: description(),
       package: package(),
       deps: deps(),
+      docs: docs(),
       name: "Greptimex",
       source_url: "https://github.com/jacson-junior/greptimex"
     ]
@@ -41,6 +42,13 @@ defmodule Greptimex.MixProject do
     [
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/jacson-junior/greptimex"}
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "readme",
+      extras: ["README.md"]
     ]
   end
 end
