@@ -12,7 +12,7 @@ defmodule Greptimex.Insert do
 
     emit_start(metadata)
 
-    inserts = Enum.map(rows, fn row -> row_to_insert(row, opts) end)
+    inserts = Enum.map(rows, fn row -> row_to_insert(row, opts[:defaults]) end)
 
     result =
       V1.GreptimeDatabase.Stub.handle(

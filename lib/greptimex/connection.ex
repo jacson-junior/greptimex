@@ -124,19 +124,23 @@ defmodule Greptimex.Connection do
 
       def insert(rows, opts) when is_list(rows) do
         with {:ok, channel} <- get_channel() do
-          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
-          opts = Keyword.put(opts, :header, merged_header_opts)
+          opts =
+            opts
+            |> Keyword.update(:header, header_opts(), &Keyword.merge(header_opts(), &1))
+            |> Keyword.update(:defaults, default_opts(), &Keyword.merge(default_opts(), &1))
 
-          Insert.handle(channel, rows, Keyword.merge(default_opts(), opts[:defaults] || []))
+          Insert.handle(channel, rows, opts)
         end
       end
 
       def insert(row, opts) do
         with {:ok, channel} <- get_channel() do
-          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
-          opts = Keyword.put(opts, :header, merged_header_opts)
+          opts =
+            opts
+            |> Keyword.update(:header, header_opts(), &Keyword.merge(header_opts(), &1))
+            |> Keyword.update(:defaults, default_opts(), &Keyword.merge(default_opts(), &1))
 
-          Insert.handle(channel, [row], Keyword.merge(default_opts(), opts[:defaults] || []))
+          Insert.handle(channel, [row], opts)
         end
       end
 
@@ -145,8 +149,10 @@ defmodule Greptimex.Connection do
 
       def query_range(query, start_time, end_time, step, lookback, opts) do
         with {:ok, channel} <- get_channel() do
-          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
-          opts = Keyword.put(opts, :header, merged_header_opts)
+          opts =
+            opts
+            |> Keyword.update(:header, header_opts(), &Keyword.merge(header_opts(), &1))
+            |> Keyword.update(:defaults, default_opts(), &Keyword.merge(default_opts(), &1))
 
           Promql.query_range(
             channel,
@@ -163,8 +169,10 @@ defmodule Greptimex.Connection do
       @impl true
       def query_instant(query, time \\ DateTime.utc_now(), lookback \\ "5m", opts \\ []) do
         with {:ok, channel} <- get_channel() do
-          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
-          opts = Keyword.put(opts, :header, merged_header_opts)
+          opts =
+            opts
+            |> Keyword.update(:header, header_opts(), &Keyword.merge(header_opts(), &1))
+            |> Keyword.update(:defaults, default_opts(), &Keyword.merge(default_opts(), &1))
 
           Promql.query_instant(
             channel,
