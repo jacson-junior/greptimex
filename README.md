@@ -1,6 +1,9 @@
 # Greptimex
 
-Elixir client for [GreptimeDB](https://greptime.com/) with gRPC support.
+[![Hex.pm](https://img.shields.io/hexpm/v/greptimex.svg)](https://hex.pm/packages/greptimex)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/greptimex/)
+
+Elixir client for [GreptimeDB](https://greptime.com/) using gRPC.
 
 ## Installation
 
