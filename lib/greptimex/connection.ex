@@ -101,49 +101,23 @@ defmodule Greptimex.Connection do
   defmacro __using__(use_opts) do
     otp_app = use_opts[:otp_app]
 
-    quote bind_quoted: [use_opts: use_opts, otp_app: otp_app] do
+    pool_opts =
+      if otp_app do
+        quote(do: Application.get_env(unquote(otp_app), __MODULE__, unquote(use_opts))[:pool])
+      else
+        use_opts[:pool]
+      end
+
+    quote do
       @behaviour Greptimex.Connection
 
-      @use_opts use_opts
-      @otp_app otp_app
+      @use_opts unquote(use_opts)
+      @otp_app unquote(otp_app)
 
-      use ConnGRPC.Pool,
-          if(@otp_app,
-            do: Application.get_env(@otp_app, __MODULE__, @use_opts)[:pool],
-            else: @use_opts[:pool]
-          )
+      use ConnGRPC.Pool, unquote(pool_opts)
 
       alias Greptimex.Insert
       alias Greptimex.Promql
-
-      defp get_config do
-        if @otp_app do
-          Application.get_env(@otp_app, __MODULE__, @use_opts)
-        else
-          @use_opts
-        end
-      end
-
-      defp header_opts do
-        config = get_config()
-
-        Keyword.merge(
-          [catalog: "greptime", database: "public"],
-          config[:header] || []
-        )
-      end
-
-      defp default_opts do
-        config = get_config()
-
-        Keyword.merge(
-          [
-            timestamp_name: "greptime_timestamp",
-            timestamp_datatype: :TIMESTAMP_MILLISECOND
-          ],
-          config[:defaults] || []
-        )
-      end
 
       @impl true
       def insert(rows, opts \\ [])
@@ -200,6 +174,39 @@ defmodule Greptimex.Connection do
             opts
           )
         end
+      end
+
+      unquote(
+        if otp_app do
+          quote do
+            defp get_config, do: Application.get_env(unquote(otp_app), __MODULE__, @use_opts)
+          end
+        else
+          quote do
+            defp get_config, do: @use_opts
+          end
+        end
+      )
+
+      defp header_opts do
+        config = get_config()
+
+        Keyword.merge(
+          [catalog: "greptime", database: "public"],
+          config[:header] || []
+        )
+      end
+
+      defp default_opts do
+        config = get_config()
+
+        Keyword.merge(
+          [
+            timestamp_name: "greptime_timestamp",
+            timestamp_datatype: :TIMESTAMP_MILLISECOND
+          ],
+          config[:defaults] || []
+        )
       end
     end
   end
