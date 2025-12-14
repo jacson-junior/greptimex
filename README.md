@@ -113,3 +113,17 @@ Events emitted:
 - `[:greptimex, :insert, :start | :success | :failure]`
 - `[:greptimex, :query_instant, :start | :success | :failure]`
 - `[:greptimex, :query_range, :start | :success | :failure]`
+
+### Payload Structure
+
+| Event | Measurements | Metadata |
+|-------|-------------|----------|
+| `:insert :start` | `system_time` | `table`, `row_count` |
+| `:insert :success` | `duration`, `affected_rows` | `table`, `row_count` |
+| `:insert :failure` | `duration` | `table`, `row_count`, `kind`, `reason` |
+| `:query_instant :start` | `system_time` | `query`, `time` |
+| `:query_instant :success` | `duration`, `result_count` | `query`, `time` |
+| `:query_instant :failure` | `duration` | `query`, `time`, `kind`, `reason` |
+| `:query_range :start` | `system_time` | `query`, `start_time`, `end_time`, `step` |
+| `:query_range :success` | `duration`, `result_count` | `query`, `start_time`, `end_time`, `step` |
+| `:query_range :failure` | `duration` | `query`, `start_time`, `end_time`, `step`, `kind`, `reason` |
