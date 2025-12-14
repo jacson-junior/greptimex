@@ -26,7 +26,7 @@ defmodule Greptimex.Connection do
       def insert(rows, opts) when is_list(rows) do
         with {:ok, channel} <- get_channel() do
           header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          Keyword.put(opts, :header, header_opts)
+          opts = Keyword.put(opts, :header, header_opts)
 
           Insert.handle(channel, rows, Keyword.merge(@default_opts, opts[:defaults] || []))
         end
@@ -35,7 +35,7 @@ defmodule Greptimex.Connection do
       def insert(row, opts) do
         with {:ok, channel} <- get_channel() do
           header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          Keyword.put(opts, :header, header_opts)
+          opts = Keyword.put(opts, :header, header_opts)
 
           Insert.handle(channel, [row], Keyword.merge(@default_opts, opts[:defaults] || []))
         end
@@ -46,7 +46,7 @@ defmodule Greptimex.Connection do
       def query_range(query, start_time, end_time, step, lookback, opts) do
         with {:ok, channel} <- get_channel() do
           header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          Keyword.put(opts, :header, header_opts)
+          opts = Keyword.put(opts, :header, header_opts)
 
           Promql.query_range(
             channel,
@@ -63,7 +63,7 @@ defmodule Greptimex.Connection do
       def query_instant(query, time \\ DateTime.utc_now(), lookback \\ "5m", opts \\ []) do
         with {:ok, channel} <- get_channel() do
           header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          Keyword.put(opts, :header, header_opts)
+          opts = Keyword.put(opts, :header, header_opts)
 
           Promql.query_instant(
             channel,
@@ -80,7 +80,7 @@ defmodule Greptimex.Connection do
   def header(opts) do
     %V1.RequestHeader{
       catalog: opts[:catalog],
-      dbname: opts[:database],
+      dbname: opts[:dbname],
       schema: opts[:schema],
       timezone: opts[:timezone],
       authorization: opts[:auth]
