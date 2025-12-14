@@ -1,5 +1,7 @@
-defmodule Mix.Tasks.UpdateProtos do
+defmodule Mix.Tasks.Greptimex.SyncPb do
   use Mix.Task
+
+  @shortdoc "Downloads Protocol Buffer definitions and generates Elixir code"
 
   @base_url "https://raw.githubusercontent.com/GreptimeTeam/greptime-proto/main/proto/greptime/v1/"
   @files [
@@ -14,7 +16,12 @@ defmodule Mix.Tasks.UpdateProtos do
 
   require Logger
 
-  def run(_) do
+  def run(_args) do
+    download_protos()
+    generate_code()
+  end
+
+  defp download_protos do
     Mix.ensure_application!(:inets)
     Mix.ensure_application!(:ssl)
 
@@ -37,7 +44,36 @@ defmodule Mix.Tasks.UpdateProtos do
       end
     end)
 
-    Mix.shell().info("Proto files update complete!")
+    Mix.shell().info("Proto files download complete!")
+  end
+
+  defp generate_code do
+    Mix.shell().info("Generating Elixir code from Protocol Buffers...")
+
+    proto_files = Path.wildcard("greptime/v1/*.proto")
+
+    if proto_files == [] do
+      Mix.shell().error("No proto files found in ./greptime/v1/")
+      exit({:shutdown, 1})
+    end
+
+    {result, exit_code} =
+      System.cmd(
+        "protoc",
+        [
+          "--elixir_opt=package_prefix=greptimex",
+          "--elixir_opt=include_docs=true",
+          "--elixir_out=one_file_per_module=true,plugins=grpc:./lib" | proto_files
+        ],
+        stderr_to_stdout: true
+      )
+
+    if exit_code == 0 do
+      Mix.shell().info("Protocol Buffers generation completed successfully")
+    else
+      Mix.shell().error("Protocol Buffers generation failed: #{result}")
+      exit({:shutdown, 1})
+    end
   end
 
   # https://github.com/nerves-flutter/nerves_flutter_support/blob/47be2a11d8e4cfc2fa8f1ae6567000674ef123dc/lib/downloader.ex#L90
