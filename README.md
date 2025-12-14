@@ -7,7 +7,7 @@ Elixir client for [GreptimeDB](https://greptime.com/) with gRPC support.
 ```elixir
 def deps do
   [
-    {:greptimex, "~> 0.1"}
+    {:greptimex, "~> 0.2"}
   ]
 end
 ```
