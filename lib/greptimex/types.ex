@@ -10,6 +10,7 @@ defmodule Greptimex.Types do
   def infer_datatype(%Date{}), do: :DATE
   def infer_datatype(%DateTime{}), do: :DATETIME
   def infer_datatype(%Time{}), do: :TIME_MICROSECOND
+  def infer_datatype(%NaiveDateTime{}), do: :DATETIME
 
   if Code.ensure_loaded?(Decimal) do
     def infer_datatype(%Decimal{}), do: :DECIMAL128
@@ -69,19 +70,45 @@ defmodule Greptimex.Types do
   def widen_datatype(:TIME_SECOND, :TIME_MILLISECOND), do: :TIME_MILLISECOND
   def widen_datatype(_, _), do: :STRING
 
-  def timestamp_value(:TIMESTAMP_NANOSECOND, ts),
+  def timestamp_value(:TIMESTAMP_NANOSECOND, %DateTime{} = ts) do
+    nanos = DateTime.to_unix(ts, :nanosecond)
+    %V1.Value{value_data: {:timestamp_nanosecond_value, nanos}}
+  end
+
+  def timestamp_value(:TIMESTAMP_NANOSECOND, ts) when is_integer(ts),
     do: %V1.Value{value_data: {:timestamp_nanosecond_value, ts}}
 
-  def timestamp_value(:TIMESTAMP_MICROSECOND, ts),
+  def timestamp_value(:TIMESTAMP_MICROSECOND, %DateTime{} = ts) do
+    micros = DateTime.to_unix(ts, :microsecond)
+    %V1.Value{value_data: {:timestamp_microsecond_value, micros}}
+  end
+
+  def timestamp_value(:TIMESTAMP_MICROSECOND, ts) when is_integer(ts),
     do: %V1.Value{value_data: {:timestamp_microsecond_value, ts}}
 
-  def timestamp_value(:TIMESTAMP_MILLISECOND, ts),
+  def timestamp_value(:TIMESTAMP_MILLISECOND, %DateTime{} = ts) do
+    millis = DateTime.to_unix(ts, :millisecond)
+    %V1.Value{value_data: {:timestamp_millisecond_value, millis}}
+  end
+
+  def timestamp_value(:TIMESTAMP_MILLISECOND, ts) when is_integer(ts),
     do: %V1.Value{value_data: {:timestamp_millisecond_value, ts}}
 
-  def timestamp_value(:TIMESTAMP_SECOND, ts),
+  def timestamp_value(:TIMESTAMP_SECOND, %DateTime{} = ts) do
+    seconds = DateTime.to_unix(ts, :second)
+    %V1.Value{value_data: {:timestamp_second_value, seconds}}
+  end
+
+  def timestamp_value(:TIMESTAMP_SECOND, ts) when is_integer(ts),
     do: %V1.Value{value_data: {:timestamp_second_value, ts}}
 
-  def timestamp_value(_, ts), do: %V1.Value{value_data: {:timestamp_millisecond_value, ts}}
+  def timestamp_value(_, %DateTime{} = ts) do
+    millis = DateTime.to_unix(ts, :millisecond)
+    %V1.Value{value_data: {:timestamp_millisecond_value, millis}}
+  end
+
+  def timestamp_value(_, ts) when is_integer(ts),
+    do: %V1.Value{value_data: {:timestamp_millisecond_value, ts}}
 
   def field_value(:INT8, v), do: %V1.Value{value_data: {:i8_value, v}}
   def field_value(:INT16, v), do: %V1.Value{value_data: {:i16_value, v}}
@@ -111,14 +138,50 @@ defmodule Greptimex.Types do
     %V1.Value{value_data: {:datetime_value, millis}}
   end
 
+  def field_value(:DATETIME, %NaiveDateTime{} = v) do
+    # Convert NaiveDateTime to milliseconds since epoch (assuming UTC)
+    millis = NaiveDateTime.diff(v, ~N[1970-01-01 00:00:00], :millisecond)
+    %V1.Value{value_data: {:datetime_value, millis}}
+  end
+
   def field_value(:DATETIME, v) when is_integer(v) do
     %V1.Value{value_data: {:datetime_value, v}}
   end
 
-  def field_value(:TIME_SECOND, v), do: %V1.Value{value_data: {:time_second_value, v}}
-  def field_value(:TIME_MILLISECOND, v), do: %V1.Value{value_data: {:time_millisecond_value, v}}
-  def field_value(:TIME_MICROSECOND, v), do: %V1.Value{value_data: {:time_microsecond_value, v}}
-  def field_value(:TIME_NANOSECOND, v), do: %V1.Value{value_data: {:time_nanosecond_value, v}}
+  def field_value(:TIME_SECOND, %Time{} = v) do
+    seconds = v.hour * 3600 + v.minute * 60 + v.second
+    %V1.Value{value_data: {:time_second_value, seconds}}
+  end
+
+  def field_value(:TIME_SECOND, v) when is_integer(v),
+    do: %V1.Value{value_data: {:time_second_value, v}}
+
+  def field_value(:TIME_MILLISECOND, %Time{} = v) do
+    millis =
+      (v.hour * 3600 + v.minute * 60 + v.second) * 1000 + div(v.microsecond |> elem(0), 1000)
+
+    %V1.Value{value_data: {:time_millisecond_value, millis}}
+  end
+
+  def field_value(:TIME_MILLISECOND, v) when is_integer(v),
+    do: %V1.Value{value_data: {:time_millisecond_value, v}}
+
+  def field_value(:TIME_MICROSECOND, %Time{} = v) do
+    micros = (v.hour * 3600 + v.minute * 60 + v.second) * 1_000_000 + (v.microsecond |> elem(0))
+    %V1.Value{value_data: {:time_microsecond_value, micros}}
+  end
+
+  def field_value(:TIME_MICROSECOND, v) when is_integer(v),
+    do: %V1.Value{value_data: {:time_microsecond_value, v}}
+
+  def field_value(:TIME_NANOSECOND, %Time{} = v) do
+    {micros, precision} = v.microsecond
+    nanos = (v.hour * 3600 + v.minute * 60 + v.second) * 1_000_000_000 + micros * 1000
+    %V1.Value{value_data: {:time_nanosecond_value, nanos}}
+  end
+
+  def field_value(:TIME_NANOSECOND, v) when is_integer(v),
+    do: %V1.Value{value_data: {:time_nanosecond_value, v}}
 
   def field_value(:INTERVAL_YEAR_MONTH, v),
     do: %V1.Value{value_data: {:interval_year_month_value, v}}
