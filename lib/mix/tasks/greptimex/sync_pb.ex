@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Greptimex.SyncPb do
+  @moduledoc false
   use Mix.Task
 
   @shortdoc "Downloads Protocol Buffer definitions and generates Elixir code"
