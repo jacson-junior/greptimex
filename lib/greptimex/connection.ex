@@ -104,47 +104,65 @@ defmodule Greptimex.Connection do
     quote bind_quoted: [use_opts: use_opts, otp_app: otp_app] do
       @behaviour Greptimex.Connection
 
-      @use_opts (if(otp_app) do
-                   Application.compile_env!(otp_app, __MODULE__)
-                 else
-                   use_opts
-                 end)
+      @use_opts use_opts
+      @otp_app otp_app
 
-      use ConnGRPC.Pool, @use_opts[:pool]
+      use ConnGRPC.Pool,
+          if(@otp_app,
+            do: Application.get_env(@otp_app, __MODULE__, @use_opts)[:pool],
+            else: @use_opts[:pool]
+          )
 
       alias Greptimex.Insert
       alias Greptimex.Promql
 
-      @header_opts Keyword.merge(
-                     [catalog: "greptime", database: "public"],
-                     @use_opts[:header] || []
-                   )
-      @default_opts Keyword.merge(
-                      [
-                        timestamp_name: "greptime_timestamp",
-                        timestamp_datatype: :TIMESTAMP_MILLISECOND
-                      ],
-                      @use_opts[:defaults] || []
-                    )
+      defp get_config do
+        if @otp_app do
+          Application.get_env(@otp_app, __MODULE__, @use_opts)
+        else
+          @use_opts
+        end
+      end
+
+      defp header_opts do
+        config = get_config()
+
+        Keyword.merge(
+          [catalog: "greptime", database: "public"],
+          config[:header] || []
+        )
+      end
+
+      defp default_opts do
+        config = get_config()
+
+        Keyword.merge(
+          [
+            timestamp_name: "greptime_timestamp",
+            timestamp_datatype: :TIMESTAMP_MILLISECOND
+          ],
+          config[:defaults] || []
+        )
+      end
 
       @impl true
       def insert(rows, opts \\ [])
 
       def insert(rows, opts) when is_list(rows) do
         with {:ok, channel} <- get_channel() do
-          header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          opts = Keyword.put(opts, :header, header_opts)
+          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
+          opts = Keyword.put(opts, :header, merged_header_opts)
 
-          Insert.handle(channel, rows, Keyword.merge(@default_opts, opts[:defaults] || []))
+          Insert.handle(channel, rows, Keyword.merge(default_opts(), opts[:defaults] || []))
         end
       end
 
       def insert(row, opts) do
         with {:ok, channel} <- get_channel() do
-          header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          opts = Keyword.put(opts, :header, header_opts)
+          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
+          opts = Keyword.put(opts, :header, merged_header_opts)
 
-          Insert.handle(channel, [row], Keyword.merge(@default_opts, opts[:defaults] || []))
+          Insert.handle(channel, [row], Keyword.merge(default_opts(), opts[:defaults] || []))
         end
       end
 
@@ -153,8 +171,8 @@ defmodule Greptimex.Connection do
 
       def query_range(query, start_time, end_time, step, lookback, opts) do
         with {:ok, channel} <- get_channel() do
-          header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          opts = Keyword.put(opts, :header, header_opts)
+          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
+          opts = Keyword.put(opts, :header, merged_header_opts)
 
           Promql.query_range(
             channel,
@@ -171,8 +189,8 @@ defmodule Greptimex.Connection do
       @impl true
       def query_instant(query, time \\ DateTime.utc_now(), lookback \\ "5m", opts \\ []) do
         with {:ok, channel} <- get_channel() do
-          header_opts = Keyword.merge(@header_opts, opts[:header] || [])
-          opts = Keyword.put(opts, :header, header_opts)
+          merged_header_opts = Keyword.merge(header_opts(), opts[:header] || [])
+          opts = Keyword.put(opts, :header, merged_header_opts)
 
           Promql.query_instant(
             channel,
