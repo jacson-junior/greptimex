@@ -13,7 +13,8 @@ defmodule Greptimex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {Greptimex.Application, []}
     ]
   end
 
@@ -23,7 +24,8 @@ defmodule Greptimex.MixProject do
       {:protobuf, "~> 0.15"},
       {:conn_grpc, "~> 0.3"},
       {:telemetry, "~> 1.0"},
-      {:castore, "~> 1.0", only: [:dev, :test]}
+      {:castore, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 end
