@@ -7,11 +7,21 @@ defmodule Greptimex.Connection do
 
   ## Configuration
 
+  ### Required
+
   * `:pool` - Connection pool options. For all options, see `ConnGRPC.Pool.start_link/1`
-  * `:header` - Default header options (catalog, database, schema, timezone, auth)
-  * `:defaults` - Default options for insert operations (timestamp_name, timestamp_datatype)
-  * `:otp_app` - (optional) The OTP application to fetch configuration from. If provided, the module will read its configuration
-    from the application's environment using the module name as the key.
+
+  ### Optional
+  * `:header` - Default header options passed with each request
+    * `:catalog` - The catalog name. Default: `"greptime"`
+    * `:database` - The database name. Default: `"public"`
+    * `:schema` - The schema name. Default: `nil`
+    * `:timezone` - The timezone for timestamp interpretation. Default: `nil`
+    * `:auth` - Authentication credentials as `{:basic, {username, password}}` tuple. Default: `nil`
+  * `:defaults` - Default options for insert operations
+    * `:timestamp_name` - The column name for timestamps. Default: `"greptime_timestamp"`
+    * `:timestamp_datatype` - The datatype for timestamps. Default: `:TIMESTAMP_MILLISECOND`
+  * `:otp_app` - The OTP application to fetch configuration from. If provided, the module will read its configuration from the application's environment using the module name as the key.
 
   ## Example
 
@@ -23,7 +33,8 @@ defmodule Greptimex.Connection do
           ],
           header: [
             catalog: "greptime",
-            database: "public"
+            database: "public",
+            auth: {:basic, {"username", "password"}}
           ]
       end
   """
