@@ -15,7 +15,11 @@ defmodule Mix.Tasks.GenPb do
     {result, exit_code} =
       System.cmd(
         "protoc",
-        ["--elixir_out=plugins=grpc:./lib" | proto_files],
+        [
+          "--elixir_opt=package_prefix=greptimex",
+          "--elixir_opt=include_docs=true",
+          "--elixir_out=one_file_per_module=true,plugins=grpc:./lib" | proto_files
+        ],
         stderr_to_stdout: true
       )
 

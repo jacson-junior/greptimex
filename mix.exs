@@ -19,10 +19,10 @@ defmodule Greptimex.MixProject do
 
   defp deps do
     [
-      {:protobuf, "~> 0.14.1"},
-      {:grpc, "~> 0.9"},
-      {:conn_grpc, "~> 0.2"},
-      {:castore, "~> 1.0", only: :dev}
+      {:grpc, "~> 0.11"},
+      {:protobuf, "~> 0.15"},
+      {:conn_grpc, "~> 0.3"},
+      {:castore, "~> 1.0", only: [:dev, :test]}
     ]
   end
 end
