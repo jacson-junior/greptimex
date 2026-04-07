@@ -110,6 +110,8 @@ defmodule Greptimex.Types do
   def timestamp_value(_, ts) when is_integer(ts),
     do: %V1.Value{value_data: {:timestamp_millisecond_value, ts}}
 
+  def field_value(_datatype, nil), do: %V1.Value{}
+
   def field_value(:INT8, v), do: %V1.Value{value_data: {:i8_value, v}}
   def field_value(:INT16, v), do: %V1.Value{value_data: {:i16_value, v}}
   def field_value(:INT32, v), do: %V1.Value{value_data: {:i32_value, v}}
@@ -226,8 +228,9 @@ defmodule Greptimex.Types do
 
   def field_value(_, v) when is_float(v), do: %V1.Value{value_data: {:f64_value, v}}
   def field_value(_, v) when is_integer(v), do: %V1.Value{value_data: {:i64_value, v}}
-  def field_value(_, v), do: %V1.Value{value_data: {:f64_value, v * 1.0}}
+  def field_value(_, v), do: %V1.Value{value_data: {:string_value, to_string(v)}}
 
+  def tag_value(_datatype, nil), do: %V1.Value{}
   def tag_value(:STRING, v), do: %V1.Value{value_data: {:string_value, to_string(v)}}
   def tag_value(:INT8, v), do: %V1.Value{value_data: {:i8_value, v}}
   def tag_value(:INT16, v), do: %V1.Value{value_data: {:i16_value, v}}
