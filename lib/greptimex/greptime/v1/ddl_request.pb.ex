@@ -1,7 +1,10 @@
 defmodule Greptimex.Greptime.V1.DdlRequest do
   @moduledoc false
 
-  use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
+  use Protobuf,
+    full_name: "greptime.v1.DdlRequest",
+    protoc_gen_elixir_version: "0.16.0",
+    syntax: :proto3
 
   oneof :expr, 0
 
@@ -47,5 +50,10 @@ defmodule Greptimex.Greptime.V1.DdlRequest do
   field :alter_database, 12,
     type: Greptimex.Greptime.V1.AlterDatabaseExpr,
     json_name: "alterDatabase",
+    oneof: 0
+
+  field :comment_on, 13,
+    type: Greptimex.Greptime.V1.CommentOnExpr,
+    json_name: "commentOn",
     oneof: 0
 end

@@ -1,7 +1,10 @@
 defmodule Greptimex.Greptime.V1.CreateFlowExpr do
   @moduledoc false
 
-  use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
+  use Protobuf,
+    full_name: "greptime.v1.CreateFlowExpr",
+    protoc_gen_elixir_version: "0.16.0",
+    syntax: :proto3
 
   field :catalog_name, 1, type: :string, json_name: "catalogName"
   field :flow_name, 2, type: :string, json_name: "flowName"

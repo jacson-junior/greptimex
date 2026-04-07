@@ -1,7 +1,10 @@
 defmodule Greptimex.Greptime.V1.AddColumn do
   @moduledoc false
 
-  use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
+  use Protobuf,
+    full_name: "greptime.v1.AddColumn",
+    protoc_gen_elixir_version: "0.16.0",
+    syntax: :proto3
 
   field :column_def, 1, type: Greptimex.Greptime.V1.ColumnDef, json_name: "columnDef"
   field :location, 3, type: Greptimex.Greptime.V1.AddColumnLocation

@@ -1,7 +1,10 @@
 defmodule Greptimex.Greptime.V1.AlterTableExpr do
   @moduledoc false
 
-  use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
+  use Protobuf,
+    full_name: "greptime.v1.AlterTableExpr",
+    protoc_gen_elixir_version: "0.16.0",
+    syntax: :proto3
 
   oneof :kind, 0
 
@@ -61,4 +64,6 @@ defmodule Greptimex.Greptime.V1.AlterTableExpr do
     type: Greptimex.Greptime.V1.SetDefaults,
     json_name: "setDefaults",
     oneof: 0
+
+  field :repartition, 18, type: Greptimex.Greptime.V1.Repartition, oneof: 0
 end

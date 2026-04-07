@@ -1,7 +1,10 @@
 defmodule Greptimex.Greptime.V1.Column.Values do
   @moduledoc false
 
-  use Protobuf, protoc_gen_elixir_version: "0.15.0", syntax: :proto3
+  use Protobuf,
+    full_name: "greptime.v1.Column.Values",
+    protoc_gen_elixir_version: "0.16.0",
+    syntax: :proto3
 
   field :i8_values, 1, repeated: true, type: :int32, json_name: "i8Values"
   field :i16_values, 2, repeated: true, type: :int32, json_name: "i16Values"
