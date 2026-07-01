@@ -18,14 +18,14 @@ defmodule Greptimex.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Greptimex.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
   defp deps do
     [
-      {:grpc, "~> 0.11"},
+      {:grpc, "~> 1.0"},
+      {:mint, "~> 1.9"},
       {:protobuf, "~> 0.15"},
       {:conn_grpc, "~> 0.3"},
       {:telemetry, "~> 1.0"},

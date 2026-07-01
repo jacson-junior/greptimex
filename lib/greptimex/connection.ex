@@ -23,6 +23,10 @@ defmodule Greptimex.Connection do
     * `:timestamp_datatype` - The datatype for timestamps. Default: `:TIMESTAMP_MILLISECOND`
   * `:otp_app` - The OTP application to fetch configuration from. If provided, the module will read its configuration from the application's environment using the module name as the key.
 
+  By default, connections use the pure-Elixir `GRPC.Client.Adapters.Mint` adapter. To use a
+  different adapter (e.g. `GRPC.Client.Adapters.Gun`), set it explicitly under
+  `pool: [channel: [opts: [adapter: GRPC.Client.Adapters.Gun]]]`.
+
   ## Example
 
       defmodule MyApp.Greptimex do
@@ -42,6 +46,20 @@ defmodule Greptimex.Connection do
   alias Greptimex.Greptime.V1
 
   @type t :: module
+
+  @default_adapter GRPC.Client.Adapters.Mint
+
+  @doc false
+  @spec merge_adapter_defaults(Keyword.t() | nil) :: Keyword.t()
+  def merge_adapter_defaults(pool_opts) do
+    pool_opts = pool_opts || []
+
+    Keyword.update(pool_opts, :channel, [opts: [adapter: @default_adapter]], fn channel_opts ->
+      Keyword.update(channel_opts, :opts, [adapter: @default_adapter], fn opts ->
+        Keyword.put_new(opts, :adapter, @default_adapter)
+      end)
+    end)
+  end
 
   @doc """
   Inserts rows into GreptimeDB. Supports single/multiple rows and single/multiple tables.
@@ -125,7 +143,7 @@ defmodule Greptimex.Connection do
       @use_opts unquote(use_opts)
       @otp_app unquote(otp_app)
 
-      use ConnGRPC.Pool, unquote(pool_opts)
+      use ConnGRPC.Pool, Greptimex.Connection.merge_adapter_defaults(unquote(pool_opts))
 
       alias Greptimex.Insert
       alias Greptimex.Promql
