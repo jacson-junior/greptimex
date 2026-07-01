@@ -15,4 +15,5 @@ defmodule Greptimex.Greptime.V1.JsonValue do
   field :str, 5, type: :string, oneof: 0
   field :array, 6, type: Greptimex.Greptime.V1.JsonList, oneof: 0
   field :object, 7, type: Greptimex.Greptime.V1.JsonObject, oneof: 0
+  field :variant, 8, type: :bytes, oneof: 0
 end
