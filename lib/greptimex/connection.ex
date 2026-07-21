@@ -258,13 +258,22 @@ defmodule Greptimex.Connection do
     }
   end
 
-  defp authorization({:basic, {username, password}}) do
-    %V1.Basic{
-      username: username,
-      password: password
-    }
+  defp authorization(nil), do: nil
+
+  defp authorization(auth) do
+    %V1.AuthHeader{auth_scheme: auth_scheme(auth)}
   end
 
-  defp authorization(nil), do: nil
-  defp authorization(_), do: nil
+  defp auth_scheme({:basic, {username, password}})
+       when is_binary(username) and is_binary(password) do
+    {:basic, %V1.Basic{username: username, password: password}}
+  end
+
+  defp auth_scheme({:token, token}) when is_binary(token) do
+    {:token, %V1.Token{token: token}}
+  end
+
+  defp auth_scheme(_auth) do
+    raise ArgumentError, "unsupported GreptimeDB authentication scheme"
+  end
 end
